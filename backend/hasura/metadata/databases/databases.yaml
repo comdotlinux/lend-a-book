@@ -1,1 +1,17 @@
-[]
+sources:
+  - name: default
+    kind: postgres
+    configuration:
+      connection_info:
+        database_url:
+          from_env: PG_DATABASE_URL
+        isolation_level: read-committed
+        use_prepared_statements: false
+    tables: []
+network: {}
+api_limits: {}
+inherited_roles: []
+opentelemetry: {}
+backend_configs: {}
+graphql_schema_introspection:
+  disabled_for_roles: []
