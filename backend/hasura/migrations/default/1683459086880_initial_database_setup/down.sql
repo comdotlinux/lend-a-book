@@ -1,0 +1,1 @@
+drop schema "lend_a_book" cascade;
