@@ -1,10 +1,11 @@
-package com.linux.base
+package com.linux.workflows
 
+import com.linux.clients.AdminClient
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
-class UserTest {
+class UserGroupCreationAndMembershipWorkflows {
 
     private val adminClient = AdminClient()
 
