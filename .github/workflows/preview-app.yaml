@@ -8,7 +8,7 @@ jobs:
   hasura-cloud-preview:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - uses: hasura/hasura-cloud-preview-apps@v0.1.9
         with:
           name: "preview-lend-a-book-${{github.env.GITHUB_HEAD_REF}}${{github.event.number}}"
