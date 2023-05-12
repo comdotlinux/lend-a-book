@@ -1,3 +1,5 @@
 - "!include lend_a_book_group.yaml"
+- "!include lend_a_book_invitation.yaml"
+- "!include lend_a_book_invitation_acceptance.yaml"
 - "!include lend_a_book_membership.yaml"
 - "!include lend_a_book_user.yaml"

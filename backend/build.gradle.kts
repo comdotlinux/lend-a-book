@@ -1,3 +1,7 @@
+import org.apache.tools.ant.taskdefs.condition.Os
+import java.nio.file.Files
+import java.nio.file.Paths
+
 plugins {
     kotlin("jvm") version "1.8.21"
     kotlin("plugin.allopen") version "1.8.21"
@@ -51,4 +55,48 @@ allOpen {
 tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
     kotlinOptions.jvmTarget = JavaVersion.VERSION_17.toString()
     kotlinOptions.javaParameters = true
+}
+
+tasks.register("hasuraLocal") {
+    group = "com.linux"
+    description = """Start local stack (localhost:8080).""".trimMargin()
+    doLast {
+        exec {
+            workingDir = project.rootDir
+            commandLine("docker compose -f docker-compose.yml up -d".split(" "))
+        }
+    }
+}
+
+tasks.register("stopHasuraLocal") {
+    group = "com.linux"
+    description = """Start local stack (localhost:8080).""".trimMargin()
+    doLast {
+        exec {
+            workingDir = project.rootDir
+            commandLine("docker compose -f docker-compose.yml down".split(" "))
+        }
+    }
+}
+
+
+tasks.register("hasuraConsole") {
+    group = "com.linux"
+    description = """Opens the hasuraConsole for editing the already running stack (localhost:8080).""".trimMargin()
+
+    val hasuraDir = project.rootDir.resolve("hasura")
+    mustRunAfter(tasks.getByName("hasuraLocal"))
+
+    // TODO: Also maybe check if hasura console is running and kill it to prevent accidentally using wrong instance?
+    doLast {
+        val browser = properties.getOrDefault("browser", "google-chrome") as String
+
+        val command = listOf("bash", "-c", "hasura console --browser=$browser")
+        val processBuilder = ProcessBuilder(command)
+        processBuilder.directory(hasuraDir)
+        val process = processBuilder.directory(hasuraDir).inheritIO().start()
+        logger.lifecycle("-- Spawned Process with pid {} and info : {} --", process.pid(), process.info())
+
+        logger.warn("---- 💡 If The Console is not launched please verify that hasura cli is installed! ----")
+    }
 }
