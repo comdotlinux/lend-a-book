@@ -2,14 +2,14 @@ table:
   name: user
   schema: lend_a_book
 array_relationships:
-  - name: user_to_groups
+  - name: groups
     using:
       foreign_key_constraint_on:
         column: created_by
         table:
           name: group
           schema: lend_a_book
-  - name: user_to_memberships
+  - name: memberships
     using:
       foreign_key_constraint_on:
         column: user_id
