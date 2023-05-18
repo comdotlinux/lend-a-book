@@ -1,14 +1,14 @@
 on: 
-  - workflow_dispatch:
-      inputs:
-        environment-name:
-          description: 'Environment to Deploy to'
-          required: true
-          type: choice
-          options:
-            - dev
-            - prod
-            - test
+  workflow_dispatch:
+    inputs:
+      environment-name:
+        description: 'Environment to Deploy to'
+        required: true
+        type: choice
+        options:
+          - dev
+          - prod
+          - test
 
 jobs:
   deploy:
