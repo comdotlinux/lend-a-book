@@ -1,26 +1,43 @@
 on: 
-  - workflow_dispatch
+  - workflow_dispatch:
+      inputs:
+        environment-name:
+          description: 'Environment to Deploy to'
+          required: true
+          type: choice
+          options:
+            - dev
+            - prod
+            - test
+
 jobs:
   deploy:
+    environment: ${{ github.event.inputs.environment-name }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
       deployments: write
     name: Deploy to Cloudflare Pages
     steps:
-      - name: Checkout
+      - name: 'Checkout'
         uses: actions/checkout@v3
-      - uses: subosito/flutter-action@v2
+      - name: 'Setup Flutter'
+        uses: subosito/flutter-action@v2
         with:
           channel: 'stable'
-      - run: flutter pub get
+          cache: true
+          cache-key: 'flutter-:os:-:channel:-:version:-:arch:-:hash:'
+          cache-path: '${{ runner.tool_cache }}/flutter/:channel:-:version:-:arch:'
+      - name: 'Install dependencies'
+        run: flutter pub get
 #       - run: flutter test
-      - run: flutter build web
-      - name: Publish
+      - name: 'Install dependencies'
+        run: flutter build web
+      - name: 'Publish To Cloudflare Pages'
         uses: cloudflare/pages-action@1
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          projectName: booklove # e.g. 'my-project'
+          projectName: 'booklove' # e.g. 'my-project'
           directory: 'build/web' # e.g. 'dist'
           gitHubToken: ${{ secrets.GITHUB_TOKEN }}
