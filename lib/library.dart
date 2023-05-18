@@ -1,10 +1,10 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:ffi';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:collection/collection.dart';
 
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
+import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 
 class OpenLibrarySearchWidget extends StatefulWidget {
   const OpenLibrarySearchWidget({super.key});
@@ -32,26 +32,35 @@ class OpenLibrarySearchWidgetState extends State<OpenLibrarySearchWidget> {
   }
 
   Future<void> _performSearch() async {
-    setState(() {
-      _isLoading = true;
-    });
+    if (_searchController.text.isEmpty || _searchController.text.length < 3) {
+      return;
+    }
     Future.delayed(const Duration(seconds: 2), () async {
-      final searchResponse = await http.get(Uri.parse('https://openlibrary.org/search.json?sort=new&limit=3&title=${_searchController.text.toLowerCase()}'));
-      if (searchResponse.statusCode == 200) {
-        final data = json.decode(searchResponse.body);
+      var queryText = _searchController.text;
+      if (queryText.isEmpty || queryText.length < 3) {
+        debugPrint('Skipping search using query $queryText');
+        return;
+      }
+      setState(() {
+        _isLoading = true;
+      });
+      final searchResponse = await DefaultCacheManager().getSingleFile('https://openlibrary.org/search.json?limit=3&title=$queryText&mode=everything');
+      if (searchResponse.existsSync()) {
+        final data = json.decode(await searchResponse.readAsString());
         var booksAsJson = List<Map<String, dynamic>>.from(data['docs']);
         var searchResults = booksAsJson.map((b) => Book.fromJson(b)).toList();
-        for (var result in _searchResults) {
+        for (var result in searchResults) {
           var singleBookInfoUri = 'https://openlibrary.org/${result.key}.json';
-          var singleBookInfoResponse = await http.get(Uri.parse(singleBookInfoUri));
-          if (singleBookInfoResponse.statusCode == 200) {
-            final singleBookInfoResponseData = json.decode(singleBookInfoResponse.body);
+          var singleBookInfoResponse = await DefaultCacheManager().getSingleFile(singleBookInfoUri);
+          if (singleBookInfoResponse.existsSync()) {
+            debugPrint('single book response : ${await singleBookInfoResponse.readAsString()}');
+            final singleBookInfoResponseData = json.decode(await singleBookInfoResponse.readAsString());
             // var covers = await http.get(Uri.parse('https://covers.openlibrary.org/b/id/240727-S.jpg'));
-            var coverIds = List<String>.from(singleBookInfoResponseData['covers'] ?? []);
-            result.coverImageUrls = coverIds.map((c) => 'https://covers.openlibrary.org/b/id/$c-S.jpg').toList();
+            var coverIds = List<int>.from(singleBookInfoResponseData['covers'] ?? []);
+            coverIds.map((c) => 'https://covers.openlibrary.org/b/id/$c-M.jpg').forEach((coverUrl) { result.addCoverUrl(coverUrl); });
             debugPrint('cover urls : ${result.coverImageUrls}');
           } else {
-            debugPrint('Status ${singleBookInfoResponse.statusCode} when getting book covers from $singleBookInfoUri');
+            debugPrint('$singleBookInfoResponse does not exist when getting book covers from $singleBookInfoUri');
           }
         }
 
@@ -61,7 +70,7 @@ class OpenLibrarySearchWidgetState extends State<OpenLibrarySearchWidget> {
           _isLoading = false;
         });
       } else {
-        debugPrint('Failed to load search results');
+        debugPrint('Failed to load search results, got $searchResponse');
       }
     });
   }
@@ -107,7 +116,11 @@ class OpenLibrarySearchWidgetState extends State<OpenLibrarySearchWidget> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           const SizedBox(height: 4),
-                          result.coverImageUrls.isNotEmpty ? Image.network(result.coverImageUrls.first) : const Text('No Cover Image'),
+                          CachedNetworkImage(
+                            placeholder: (context, url) => const CircularProgressIndicator(),
+                            imageUrl: result.coverImageUrls.isNotEmpty ? result.coverImageUrls.first : 'http://via.placeholder.com/350x150',
+                            errorWidget: (context, url, error) => const Icon(Icons.error),
+                          ),
                           const SizedBox(height: 4),
                           Text('Author: ${result.authors.map((a) => a.name).join(', ')}'),
                           const SizedBox(height: 4),
@@ -134,6 +147,11 @@ class Book {
   List<Author> authors;
   List<String> isbns;
   List<String> coverImageUrls = [];
+
+  void addCoverUrl(String url) {
+    coverImageUrls.add(url);
+  }
+
 
   Book.create({required this.key, required this.type, required this.title, required this.subjects, required this.firstPublished, required this.publishers, required this.authors, required this.isbns});
 
