@@ -36,12 +36,27 @@ class OpenLibrarySearchWidgetState extends State<OpenLibrarySearchWidget> {
       _isLoading = true;
     });
     Future.delayed(const Duration(seconds: 2), () async {
-      final response = await http.get(Uri.parse('https://openlibrary.org/search.json?sort=new&limit=3&title=${_searchController.text.toLowerCase()}'));
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
+      final searchResponse = await http.get(Uri.parse('https://openlibrary.org/search.json?sort=new&limit=3&title=${_searchController.text.toLowerCase()}'));
+      if (searchResponse.statusCode == 200) {
+        final data = json.decode(searchResponse.body);
+        var booksAsJson = List<Map<String, dynamic>>.from(data['docs']);
+        var searchResults = booksAsJson.map((b) => Book.fromJson(b)).toList();
+        for (var result in _searchResults) {
+          var singleBookInfoUri = 'https://openlibrary.org/${result.key}.json';
+          var singleBookInfoResponse = await http.get(Uri.parse(singleBookInfoUri));
+          if (singleBookInfoResponse.statusCode == 200) {
+            final singleBookInfoResponseData = json.decode(singleBookInfoResponse.body);
+            // var covers = await http.get(Uri.parse('https://covers.openlibrary.org/b/id/240727-S.jpg'));
+            var coverIds = List<String>.from(singleBookInfoResponseData['covers'] ?? []);
+            result.coverImageUrls = coverIds.map((c) => 'https://covers.openlibrary.org/b/id/$c-S.jpg').toList();
+            debugPrint('cover urls : ${result.coverImageUrls}');
+          } else {
+            debugPrint('Status ${singleBookInfoResponse.statusCode} when getting book covers from $singleBookInfoUri');
+          }
+        }
+
         setState(() {
-          var booksAsJson = List<Map<String, dynamic>>.from(data['docs']);
-          _searchResults = booksAsJson.map((b) => Book.fromJson(b)).toList();
+          _searchResults = searchResults;
 
           _isLoading = false;
         });
@@ -92,6 +107,8 @@ class OpenLibrarySearchWidgetState extends State<OpenLibrarySearchWidget> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           const SizedBox(height: 4),
+                          result.coverImageUrls.isNotEmpty ? Image.network(result.coverImageUrls.first) : const Text('No Cover Image'),
+                          const SizedBox(height: 4),
                           Text('Author: ${result.authors.map((a) => a.name).join(', ')}'),
                           const SizedBox(height: 4),
                           Text('Published: ${result.firstPublished}'),
@@ -116,6 +133,7 @@ class Book {
   List<String> publishers;
   List<Author> authors;
   List<String> isbns;
+  List<String> coverImageUrls = [];
 
   Book.create({required this.key, required this.type, required this.title, required this.subjects, required this.firstPublished, required this.publishers, required this.authors, required this.isbns});
 
