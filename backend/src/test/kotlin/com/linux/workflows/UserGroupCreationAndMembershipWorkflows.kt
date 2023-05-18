@@ -25,12 +25,18 @@ class UserGroupCreationAndMembershipWorkflows {
 
 
     @Test
-    fun `A User Can Create a Group`() {
-        val user = adminClient.createUser()
-        val group = adminClient.createGroup(user)
+    fun `user Can Create a Group and is also then added as an admin in the membership`() {
+        val userClient = adminClient.userClient()
+        val group = userClient.createGroup()
         assertThat(group).isNotNull.satisfies({
-            assertThat(it.createdBy).isEqualTo(user.id)
+            assertThat(it.createdBy).isEqualTo(userClient.user.id)
             assertThat(it.active).isTrue
         })
+
+        assertThat(userClient.getMemberships(group.id)).hasSize(1).allSatisfy {
+            assertThat(it.admin).isTrue
+            assertThat(it.userId).isEqualTo(userClient.user.id)
+        }
     }
+
 }

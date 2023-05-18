@@ -66,3 +66,12 @@ Create your first JPA entity
 
 
 [Related Hibernate with Panache in Kotlin section...](https://quarkus.io/guides/hibernate-orm-panache-kotlin)
+
+
+
+
+
+
+* https://github.com/firebase/flutterfire/blob/master/packages/firebase_ui_auth/README.md
+* https://github.com/firebase/flutterfire/blob/master/packages/firebase_ui_auth/doc/theming.md
+* https://github.com/firebase/flutterfire/blob/master/packages/firebase_ui_auth/doc/providers/oauth.md

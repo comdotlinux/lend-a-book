@@ -1,0 +1,3 @@
+table:
+  name: invitation_acceptance
+  schema: lend_a_book
