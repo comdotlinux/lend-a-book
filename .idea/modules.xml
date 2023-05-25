@@ -2,8 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/lend_a_book.iml" filepath="$PROJECT_DIR$/lend_a_book.iml" />
-      <module fileurl="file://$PROJECT_DIR$/android/lend_a_book_android.iml" filepath="$PROJECT_DIR$/android/lend_a_book_android.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/lend-a-book.iml" filepath="$PROJECT_DIR$/.idea/lend-a-book.iml" />
     </modules>
   </component>
 </project>

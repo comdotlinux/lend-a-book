@@ -1,4 +1,4 @@
 flutter 3.10.1-stable
 firebase 11.29.1
 java graalvm-22.3.2+java17
-nodejs lts-gallium
+nodejs 20.2.0

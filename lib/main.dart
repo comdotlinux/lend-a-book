@@ -1,33 +1,36 @@
+import 'package:app_links/app_links.dart';
 import 'package:english_words/english_words.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:nhost_flutter_auth/nhost_flutter_auth.dart';
+import 'package:url_launcher/url_launcher.dart' as url_launcher;
+// import 'package:simple_icons/simple_icons.dart';
+
+import 'config.dart';
 
 import 'library.dart';
 
+/// Fill in this value with the subdomain and region found on your Nhost project page.
+const nhostGithubSignInUrl = 'https://local.auth.nhost.run/v1/signin/provider/github';
+const nhostGoogleSignInUrl = 'https://wlvuqvwubqqschjjpook.auth.eu-central-1.nhost.run/v1/signin/provider/google';
+
+const signInSuccessHost = 'oauth.login.success';
+const signInFailureHost = 'oauth.login.failure';
+
 void main() {
-  runApp(const MyApp());
+  runApp(const OAuthExample());
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class OAuthExample extends StatefulWidget {
+  const OAuthExample({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (context) => MyAppState(),
-      child: MaterialApp(
-        title: 'Book Love',
-        theme: ThemeData(
-          useMaterial3: true,
-          colorScheme: ColorScheme.fromSeed(seedColor: Colors.blueGrey),
-        ),
-        home: const MyHomePage(),
-      ),
-    );
-  }
+  OAuthExampleState createState() => OAuthExampleState();
 }
 
-class MyAppState extends ChangeNotifier {
+class OAuthExampleState extends State<OAuthExample> with ChangeNotifier {
+  late NhostClient nhostClient;
+  late AppLinks appLinks;
   var current = WordPair.random();
 
   void getNext() {
@@ -46,6 +49,49 @@ class MyAppState extends ChangeNotifier {
     debugPrint("favorites $favorites");
     notifyListeners();
   }
+
+  handleAppLink() async {
+    appLinks = AppLinks();
+    final uri = await appLinks.getInitialAppLink();
+    if (uri?.host == signInSuccessHost) {
+      await nhostClient.auth.completeOAuthProviderSignIn(uri!);
+    }
+    await url_launcher.closeInAppWebView();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+// Create a new Nhost client using your project's subdomain and region.
+    nhostClient = NhostClient(
+      subdomain: Subdomain(
+        subdomain: subdomain,
+        region: region,
+      ),
+    );
+    handleAppLink();
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    nhostClient.close();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return NhostAuthProvider(
+      auth: nhostClient.auth,
+      child: MaterialApp(
+        title: 'Book Love',
+        theme: ThemeData(
+          useMaterial3: true,
+          colorScheme: ColorScheme.fromSeed(seedColor: Colors.blueGrey),
+        ),
+        home: const MyHomePage(),
+      ),
+    );
+  }
 }
 
 class MyHomePage extends StatefulWidget {
@@ -58,21 +104,30 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   var selectedWidget = 0;
 
+  Widget selectOne(int selected) {
+    switch (selected) {
+      case 0:
+        return const GeneratorPage();
+      case 1:
+        return const FavoritesPage();
+      case 2:
+        return const OpenLibrarySearchWidget();
+      default:
+        throw UnimplementedError('no widget for slot $selected');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final auth = NhostAuthProvider.of(context)!;
     Widget page;
-    switch (selectedWidget) {
-      case 0:
-        page = const GeneratorPage();
-        break;
-      case 1:
-        page = const FavoritesPage();
-        break;
-      case 2:
-        page = const OpenLibrarySearchWidget();
+    switch (auth.authenticationState) {
+      case AuthenticationState.signedIn:
+        page = selectOne(selectedWidget);
         break;
       default:
-        throw UnimplementedError('no widget for $selectedWidget');
+        page = const ProviderSignInForm();
+        break;
     }
     return LayoutBuilder(builder: (context, constraints) {
       return Scaffold(
@@ -123,7 +178,7 @@ class GeneratorPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    var appState = context.watch<MyAppState>();
+    var appState = context.watch<OAuthExampleState>();
     var pair = appState.current;
     IconData icon;
     if (appState.favorites.contains(pair)) {
@@ -197,7 +252,7 @@ class FavoritesPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    var appState = context.watch<MyAppState>();
+    var appState = context.watch<OAuthExampleState>();
     var theme = Theme.of(context);
     var secondaryStyle = theme.textTheme.displayMedium!.copyWith(color: theme.colorScheme.onSecondary);
     var tertiaryStyle = theme.textTheme.displayMedium!.copyWith(color: theme.colorScheme.onTertiary);
@@ -221,7 +276,10 @@ class FavoritesPage extends StatelessWidget {
           color: theme.colorScheme.tertiary,
           child: Padding(
             padding: const EdgeInsets.all(20.0),
-            child: Text('You have ${appState.favorites.length} favourites', style: tertiaryStyle,),
+            child: Text(
+              'You have ${appState.favorites.length} favourites',
+              style: tertiaryStyle,
+            ),
           ),
         ),
         for (var fav in appState.favorites)
@@ -231,7 +289,10 @@ class FavoritesPage extends StatelessWidget {
               padding: const EdgeInsets.all(8.0),
               child: ListTile(
                 leading: const Icon(Icons.favorite),
-                title: Text(fav.asLowerCase, style: secondaryStyle,),
+                title: Text(
+                  fav.asLowerCase,
+                  style: secondaryStyle,
+                ),
                 trailing: ElevatedButton.icon(
                   onPressed: () {
                     appState.toggleFavourite(fav);
@@ -243,6 +304,65 @@ class FavoritesPage extends StatelessWidget {
             ),
           ),
       ],
+    );
+  }
+}
+
+class ProviderSignInForm extends StatelessWidget {
+  const ProviderSignInForm({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        BigLoginCard(
+          signInUrl: nhostGithubSignInUrl,
+          iconData: SimpleIcons,
+          name: 'GitHub',
+        ),
+        BigLoginCard(
+          signInUrl: nhostGoogleSignInUrl,
+          signInText: 'Authenticate with Google',
+        ),
+      ],
+    );
+  }
+}
+
+class BigLoginCard extends StatelessWidget {
+  const BigLoginCard({
+    super.key,
+    required this.signInUrl,
+    required this.name,
+    required this.iconData,
+  });
+
+  final String signInUrl;
+  final String name;
+  final SimpleIcons icons;
+
+  @override
+  Widget build(BuildContext context) {
+    var theme = Theme.of(context);
+    var style = theme.textTheme.displayMedium?.copyWith(color: theme.colorScheme.onPrimary)?.getTextStyle();
+    return Card(
+      color: theme.colorScheme.primary,
+      child: Padding(
+        padding: const EdgeInsets.all(20.0),
+        child: ElevatedButton.icon(
+          onPressed: () async {
+            try {
+              await url_launcher.launchUrl(Uri.parse(signInUrl));
+            } on Exception {
+              // Exceptions can occur due to weirdness with redirects
+              debugPrint('exception occurred in launching $signInUrl');
+            }
+          },
+          icon: Icon(iconData),
+          label: Text(name),
+        ),
+      ),
     );
   }
 }
