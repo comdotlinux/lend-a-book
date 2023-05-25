@@ -1,3 +1,0 @@
-dataconnector:
-  athena:
-    uri: http://data-connector-agent:8081/api/v1/athena
