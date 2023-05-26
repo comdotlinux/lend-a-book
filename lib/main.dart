@@ -94,8 +94,8 @@ class _MyHomePageState extends State<MyHomePage> {
                       label: Text('Favorites'),
                     ),
                     NavigationRailDestination(
-                      icon: Icon(Icons.book_online),
-                      label: Text('Book'),
+                      icon: Icon(Icons.search_outlined),
+                      label: Text('Book Search'),
                     ),
                     NavigationRailDestination(
                       icon: Icon(Icons.book),

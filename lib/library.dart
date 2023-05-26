@@ -113,12 +113,16 @@ const publishers = ["HarperCollins Publishers", "Albin Michel", "Deutsche Verlag
 var authors = [Author.create("OL3778242A", "Yuval Noah Harari"), Author.create("OL8654786A", "Giuseppe Bernardi"), Author.create("OL8598815A", "David Vandermeulen"), Author.create("OL3145199A", "Daniel Casanave")];
 const isbns = ["9781846558238","6559213013","9788845296499","6055029359","9781846558245","9780771038501","0099590085","9783421045959","2226257012","9786559213016","8499924212","1846558247","8525432180","9780063051331","0063051338","9788499924212","9788377059968","8418006811","9788525432186","8377059967","4309226728","430922671X","9734668463","9788934972464","9784309226712","9784309226729","6055029731","9781784873646","9780771038518","9789734668465","0771038518","0062316095","9780062316097","9786055029357","9734648888","1716994985","9788418006814","9781494556907","9781538456590","342104595X","8499926223","9789734648887","9734668471","144819069X","9781716994982","9789734668472","1494556901","9780063055087","9588806836","5905891648","0063055082","9781448190690","8845296490","9789537213657","9782226257017","8934972467","1538456591","077103850X","1784873640","9788499926223","9783570552698","9786055029739","0062316117","3570552691","9780099590088","1846558239","953721365X","9780062316110","9789588806839","9785905891649"];
 var result = SearchResultBook.create(key: "/works/OL17075811W", type: "/type/author_role", title: "Sapiens", subjects: subjects, firstPublished: 2001, publishers: publishers, authors: authors, isbns: isbns);
+
 class StaticOpenLibrarySearchWidget extends StatelessWidget {
   const StaticOpenLibrarySearchWidget({super.key});
+
   @override
   Widget build(BuildContext context) {
     result.addCoverUrl("https://covers.openlibrary.org/b/id/7387235-M.jpg");
-    return Scaffold(body: BookCard(searchResult: result));
+    result.addCoverUrl("https://covers.openlibrary.org/b/id/8117573-M.jpg");
+    return BookCard(
+        searchResult: result,
+    );
   }
 }
-

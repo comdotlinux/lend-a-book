@@ -11,7 +11,7 @@ class SearchResultBook {
   List<String> publishers;
   List<Author> authors;
   List<String> isbns;
-  List<String> coverImageUrls = [];
+  Set<String> coverImageUrls = {};
 
   void addCoverUrl(String url) {
     coverImageUrls.add(url);

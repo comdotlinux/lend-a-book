@@ -1,14 +1,13 @@
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:collection/collection.dart';
+import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
 import 'package:lend_a_book/library.dart';
 import 'package:logger/logger.dart';
 
 import '../openlibrary/book.dart';
-import 'image_carousel.dart';
 
 const smallSpacing = 10.0;
-const double cardWidth = 115;
+const double cardWidth = 1000;
 const double widthConstraint = 450;
 
 class BookCard extends StatelessWidget {
@@ -24,27 +23,21 @@ class BookCard extends StatelessWidget {
       label: searchResult.title,
       tooltipMessage: 'The internal key is ${searchResult.key}',
       child: Wrap(
-        alignment: WrapAlignment.spaceBetween,
+        alignment: WrapAlignment.spaceEvenly,
         children: [
           SizedBox(
-            // width: cardWidth,
+            width: MediaQuery.of(context).size.width,
             child: Card(
               child: Container(
                 padding: const EdgeInsets.fromLTRB(10, 5, 5, 10),
                 child: Column(
                   children: [
-                    ExpandingCards(
-                      items: searchResult.coverImageUrls, height: 50,
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: TextCard('${searchResult.title} (first published: ${searchResult.firstPublished})'),
                     ),
-/*                    Align(
-                      child: CachedNetworkImage(
-                        placeholder: (context, url) => const CircularProgressIndicator(),
-                        imageUrl: searchResult.coverImageUrls.isNotEmpty ? searchResult.coverImageUrls.first : 'http://via.placeholder.com/350x150',
-                        errorWidget: (context, url, error) => const Icon(Icons.error),
-                      ),
-                    ),*/
                     const Divider(),
-                    Text('Published: ${searchResult.firstPublished}'),
+                    MultipleImageCarousel(searchResult.coverImageUrls.toList()),
                     const Divider(),
                     const Text('Publishers'),
                     const TitleList(publishers),
@@ -53,13 +46,33 @@ class BookCard extends StatelessWidget {
                       alignment: Alignment.topRight,
                       child: IconButton(
                         icon: const Icon(Icons.more_vert),
-                        onPressed: () {},
+                        onPressed: () {
+                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                            action: SnackBarAction(
+                              label: 'TODO',
+                              onPressed: () {
+                                // Code to execute.
+                              },
+                            ),
+                            content: const Text('Reserve / Borrow'),
+                            duration: const Duration(seconds: 5),
+                            width: 280.0,
+                            // Width of the SnackBar.
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8.0, // Inner padding for SnackBar content.
+                            ),
+                            behavior: SnackBarBehavior.floating,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10.0),
+                            ),
+                          ));
+                        },
                       ),
                     ),
                     const SizedBox(height: 20),
                     const Align(
                       alignment: Alignment.bottomLeft,
-                      child: Text('Elevated'),
+                      child: Text('Some More things like authors isbn e.t.c.'),
                     )
                   ],
                 ),
@@ -109,7 +122,7 @@ class _ComponentDecorationState extends State<ComponentDecoration> {
               ],
             ),
             ConstrainedBox(
-              constraints: const BoxConstraints.tightFor(width: widthConstraint),
+              constraints: BoxConstraints.tightFor(width: (MediaQuery.of(context).size.width * 0.5)),
               // Tapping within the a component card should request focus
               // for that component's children.
               child: Focus(
@@ -152,20 +165,117 @@ class TitleList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ListView(
-      shrinkWrap: true,
-      padding: const EdgeInsets.all(1),
-      children: _inputs
-          .map((input) => [
-                ListTile(
-                  leading: CircleAvatar(child: Text(input.characters.first)),
-                  title: Text(input),
-                  trailing: const Icon(Icons.person_2),
+    return SizedBox(
+      height: 100,
+      child: ListView.builder(
+          shrinkWrap: true,
+          padding: const EdgeInsets.all(1),
+          itemCount: _inputs.length,
+          itemBuilder: (context, index) {
+            final item = _inputs[index % _inputs.length];
+            return ListTile(
+              leading: CircleAvatar(child: Text(item.characters.first)),
+              title: Text(item),
+              trailing: const Icon(Icons.person_2),
+            );
+          }),
+    );
+  }
+}
+
+class MultipleImageCarousel extends StatelessWidget {
+  final List<String> _images;
+
+  const MultipleImageCarousel(this._images, {super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      child: CarouselSlider.builder(
+        options: CarouselOptions(aspectRatio: 2.0, enlargeCenterPage: true, viewportFraction: 1, autoPlay: _images.length > 2, enableInfiniteScroll: false),
+        itemCount: (_images.length / 2).round(),
+        itemBuilder: (context, index, realIdx) {
+          final int first = index * 2;
+          final int second = first + 1;
+          return Row(
+            children: [first, second].map((idx) {
+              return Expanded(
+                flex: 1,
+                child: Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 10),
+                  // child: Image.network(_images[idx], fit: BoxFit.cover),
+                  child: CachedNetworkImage(
+                    placeholder: (context, url) => const CircularProgressIndicator(),
+                    imageUrl: _images[idx],
+                    errorWidget: (context, url, error) => const Icon(Icons.error),
+                  ),
                 ),
-                const Divider(height: 0)
-              ])
-          .flattened
-          .toList(),
+              );
+            }).toList(),
+          );
+        },
+      ),
+    );
+  }
+}
+
+class TextCard extends StatelessWidget {
+  final String _text;
+
+  const TextCard(
+    this._text, {
+    super.key,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    var theme = Theme.of(context);
+    var style = theme.textTheme.headlineSmall!.copyWith(color: theme.colorScheme.onSecondary);
+    return Card(
+      color: theme.colorScheme.secondary,
+      child: Padding(
+        padding: const EdgeInsets.all(10.0),
+        child: Text(
+          _text,
+          style: style,
+        ),
+      ),
+    );
+  }
+}
+
+class ToDoSnackBar extends StatelessWidget {
+  final Set<String> _texts;
+
+  const ToDoSnackBar(this._texts, {super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return ElevatedButton(
+      child: const Text('Show Snackbar'),
+      onPressed: () {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            action: SnackBarAction(
+              label: 'Action',
+              onPressed: () {
+                // Code to execute.
+              },
+            ),
+            content: const Text('Awesome SnackBar!'),
+            duration: const Duration(milliseconds: 1500),
+            width: 280.0,
+            // Width of the SnackBar.
+            padding: const EdgeInsets.symmetric(
+              horizontal: 8.0, // Inner padding for SnackBar content.
+            ),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10.0),
+            ),
+          ),
+        );
+      },
     );
   }
 }
