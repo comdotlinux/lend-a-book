@@ -11,7 +11,7 @@ class CarouselImage {
   Color color; // const Color(0xFFED5565),
   IconData icon = Icons.image;
 
-  factory CarouselImage.create({required String title, required String subtitle, required String image, required Color color, IconData icon = Icons.image }) {
+  factory CarouselImage.create({required String image, String title = '', String subtitle = '', Color color = const Color(0xFFFC6E51), IconData icon = Icons.image }) {
     return CarouselImage(title, subtitle, image, color, icon);
   }
 
