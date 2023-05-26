@@ -25,7 +25,5 @@ doc/api/
 
 .flutter-plugins
 .flutter-plugins-dependencies
-/.idea/aws.xml
-/.idea/jpa-buddy.xml
-/.idea/misc.xml
-/.idea/Dart_Packages.xml
+.idea/**
+**/.idea/**

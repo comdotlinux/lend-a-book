@@ -9,6 +9,13 @@
       <excludeFolder url="file://$MODULE_DIR$/build" />
       <excludeFolder url="file://$MODULE_DIR$/.dart_tool" />
       <excludeFolder url="file://$MODULE_DIR$/.pub" />
+      <excludeFolder url="file://$MODULE_DIR$/backend/booklove/functions/node_modules" />
+      <excludeFolder url="file://$MODULE_DIR$/backend/booklove/.idea" />
+      <excludeFolder url="file://$MODULE_DIR$/backend/booklove/.nhost" />
+      <excludeFolder url="file://$MODULE_DIR$/backend/booklove/node_modules" />
+      <excludeFolder url="file://$MODULE_DIR$/linux/flutter/ephemeral" />
+      <excludeFolder url="file://$MODULE_DIR$/macos/Flutter/ephemeral" />
+      <excludeFolder url="file://$MODULE_DIR$/windows/flutter/ephemeral" />
     </content>
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" name="Dart SDK" level="project" />
