@@ -56,7 +56,7 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  var selectedWidget = 0;
+  var selectedWidget = 3;
 
   @override
   Widget build(BuildContext context) {
@@ -70,6 +70,9 @@ class _MyHomePageState extends State<MyHomePage> {
         break;
       case 2:
         page = const OpenLibrarySearchWidget();
+        break;
+      case 3:
+        page = const StaticOpenLibrarySearchWidget();
         break;
       default:
         throw UnimplementedError('no widget for $selectedWidget');
@@ -91,8 +94,12 @@ class _MyHomePageState extends State<MyHomePage> {
                       label: Text('Favorites'),
                     ),
                     NavigationRailDestination(
-                      icon: Icon(Icons.book),
+                      icon: Icon(Icons.book_online),
                       label: Text('Book'),
+                    ),
+                    NavigationRailDestination(
+                      icon: Icon(Icons.book),
+                      label: Text('Static Book'),
                     ),
                   ],
                   selectedIndex: selectedWidget,
@@ -221,7 +228,10 @@ class FavoritesPage extends StatelessWidget {
           color: theme.colorScheme.tertiary,
           child: Padding(
             padding: const EdgeInsets.all(20.0),
-            child: Text('You have ${appState.favorites.length} favourites', style: tertiaryStyle,),
+            child: Text(
+              'You have ${appState.favorites.length} favourites',
+              style: tertiaryStyle,
+            ),
           ),
         ),
         for (var fav in appState.favorites)
@@ -231,7 +241,10 @@ class FavoritesPage extends StatelessWidget {
               padding: const EdgeInsets.all(8.0),
               child: ListTile(
                 leading: const Icon(Icons.favorite),
-                title: Text(fav.asLowerCase, style: secondaryStyle,),
+                title: Text(
+                  fav.asLowerCase,
+                  style: secondaryStyle,
+                ),
                 trailing: ElevatedButton.icon(
                   onPressed: () {
                     appState.toggleFavourite(fav);
